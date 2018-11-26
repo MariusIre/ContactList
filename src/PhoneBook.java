@@ -11,8 +11,8 @@ public class PhoneBook {
     private static final String PHONE_NUMBER = "PHONE_NUMBER";
 
     private Map<String, ContactGroup> phoneBook = new TreeMap<>();
-    Map<String, Integer> tableColumns = new TreeMap<>();
-    String[] tableColumn;
+    private Map<String, Integer> tableColumns = new TreeMap<>();
+    private String[] tableColumn;
 
     public PhoneBook() {
     }
@@ -21,6 +21,14 @@ public class PhoneBook {
         for (Contact contact : contactGroup.getContactList()) {
             addContact(contact);
         }
+    }
+
+    public List<Contact> getAllCurentContacts() {
+        return phoneBook.values()
+                .stream()
+                .map(ContactGroup::getContactList)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
     }
 
     public void addContact(Contact contact) {
@@ -132,15 +140,22 @@ public class PhoneBook {
                 System.out.println("CSV not coresponding.");
                 return;
             }
+            int x = 0;
             while ((line = reader.readLine()) != null) {
-
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    System.out.println("Sleep failed");
+                }
                 String[] splitLine = line.split(",");
                 String lastName = splitLine[tableColumns.get(LAST_NAME)];
                 String firstName = splitLine[tableColumns.get(FIRST_NAME)];
                 String phoneNumber = splitLine[tableColumns.get(PHONE_NUMBER)];
 
                 addContact(new Contact(lastName, firstName, phoneNumber));
+                x++;
             }
+            System.out.println(x + " has been added.");
             reader.close();
         } catch (IOException e) {
             System.out.println("File not found.");
@@ -154,15 +169,15 @@ public class PhoneBook {
     }
 
     public void writeContactInCsv(String filePath, Contact contact) {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath,true))) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath, true))) {
 
             StringBuilder strBuilder = new StringBuilder();
             for (int i = 0; i < tableColumn.length; i++) {
                 if (i == tableColumns.get(LAST_NAME)) {
                     strBuilder.append(contact.getLastName()).append(",");
-                }else if (i == tableColumns.get(FIRST_NAME)) {
+                } else if (i == tableColumns.get(FIRST_NAME)) {
                     strBuilder.append(contact.getFirstName()).append(",");
-                }else if (i == tableColumns.get(PHONE_NUMBER)) {
+                } else if (i == tableColumns.get(PHONE_NUMBER)) {
                     strBuilder.append(contact.getNumber());
                 } else {
                     strBuilder.append(" ,");
@@ -180,15 +195,25 @@ public class PhoneBook {
     }
 
     public void removeContactFromCsv(String filePath) {
+        printTableHeader(filePath);
+        for (String key : phoneBook.keySet()) {
+            for (Contact contact : phoneBook.get(key).getContactList()) {
+                writeContactInCsv(filePath, contact);
+            }
+        }
+
+    }
+
+    public void printTableHeader(String filePath) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath))) {
 
             StringBuilder strBuilder = new StringBuilder();
             for (int i = 0; i < tableColumn.length; i++) {
                 if (i == tableColumns.get(LAST_NAME)) {
                     strBuilder.append(LAST_NAME).append(",");
-                }else if (i == tableColumns.get(FIRST_NAME)) {
+                } else if (i == tableColumns.get(FIRST_NAME)) {
                     strBuilder.append(FIRST_NAME).append(",");
-                }else if (i == tableColumns.get(PHONE_NUMBER)) {
+                } else if (i == tableColumns.get(PHONE_NUMBER)) {
                     strBuilder.append(PHONE_NUMBER);
                 } else {
                     strBuilder.append(" ,");
@@ -197,18 +222,12 @@ public class PhoneBook {
             String s = new String(strBuilder);
             bw.write(s);
             bw.close();
-            for(String key : phoneBook.keySet()) {
-                for(Contact contact : phoneBook.get(key).getContactList()) {
-                    writeContactInCsv(filePath,contact);
-                }
-            }
         } catch (IOException e) {
             System.out.println("File not found.");
         }
-
     }
 
-    public void editContact(Contact contact, Contact editContact){
+    public void editContact(Contact contact, Contact editContact) {
         removeContact(contact);
         addContact(editContact);
     }

@@ -1,28 +1,27 @@
-import java.util.Date;
+
+import java.io.File;
 import java.util.Objects;
 
-public class Backup {
+public class Backup implements Comparable<Backup>{
 
-    private String name;
-    private Date date;
-    private String location;
+    private File file;
 
-    public Backup(String name, Date date, String location) {
-        this.name = name;
-        this.date = date;
-        this.location = location;
+    public Backup(File file) {
+        this.file = file;
     }
 
-    public String getName() {
-        return name;
+    public File getFile() {
+        return file;
     }
 
-    public Date getDate() {
-        return date;
+    @Override
+    public int compareTo(Backup b) {
+        return file.getName().compareTo(b.getFile().getName());
     }
 
-    public String getLocation() {
-        return location;
+    @Override
+    public String toString() {
+        return file.getName();
     }
 
     @Override
@@ -30,13 +29,11 @@ public class Backup {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Backup backup = (Backup) o;
-        return Objects.equals(name, backup.name) &&
-                Objects.equals(date, backup.date) &&
-                Objects.equals(location, backup.location);
+        return Objects.equals(file, backup.file);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, date, location);
+        return Objects.hash(file);
     }
 }
